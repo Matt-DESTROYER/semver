@@ -102,8 +102,11 @@ version_t version_parse(const char* string, size_t length);
 
 semver_t semver_new(void);
 semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* semver);
-void semver_evaluate_restriction(semver_t* version);
 void semver_free(semver_t* semver);
+
+cute_version_t cute_version_new(void);
+void cute_version_evaluate_restriction(cute_version_t* version);
+void cute_version_free();
 
 int version_cmp(const version_t* x, const version_t* y);
 int semver_cmp(const semver_t* x, const semver_t* y);
