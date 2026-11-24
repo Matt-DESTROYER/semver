@@ -26,13 +26,6 @@ typedef enum version_restriction {
 	VERSION_ANY // *
 } version_restriction_t;
 
-typedef enum version_type {
-	VERSION_RELEASE,
-	VERSION_RELEASE_CANDIDATE,
-	VERSION_ALPHA,
-	VERSION_BETA
-} version_type_t;
-
 typedef enum version_number_type {
 	VERSION_NUMBER_NONE,
 	VERSION_NUMBER_ANY,
@@ -57,7 +50,6 @@ typedef struct semver {
 	version_t min;
 	version_t max;
 
-	version_type_t type;
 	char* prerelease_metadata;
 	char* build_metadata;
 } semver_t;

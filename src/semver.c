@@ -382,7 +382,6 @@ semver_t semver_new() {
 		.min = version_new(),
 		.max = version_new(),
 
-		.type = VERSION_RELEASE,
 		.build_metadata = NULL
 	};
 }
