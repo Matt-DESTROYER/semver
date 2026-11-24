@@ -45,14 +45,22 @@ typedef struct version {
 
 typedef struct semver {
 	version_t version;
-
-	version_restriction_t restriction;
-	version_t min;
-	version_t max;
-
 	char* prerelease_metadata;
 	char* build_metadata;
 } semver_t;
+
+typedef struct cute_version {
+	version_t version;
+
+	version_restriction_t restriction;
+	version_t min;
+	bool min_inclusive;
+	version_t max;
+	bool max_inclusive;
+
+	char* prerelease_metadata;
+	char* build_metadata;
+} cute_version_t;
 
 typedef enum semver_parse_status {
 	SEMVER_VALID,

@@ -377,11 +377,7 @@ version_t version_parse(const char *string, size_t length) {
 semver_t semver_new() {
 	return (semver_t){
 		.version = version_new(),
-
-		.restriction = VERSION_EQUALS,
-		.min = version_new(),
-		.max = version_new(),
-
+		.prerelease_metadata = NULL,
 		.build_metadata = NULL
 	};
 }
@@ -480,7 +476,7 @@ void semver_free(semver_t* semver) {
 }
 
 // TODO:
-void semver_evaluate_restriction(semver_t* version) {
+void cute_version_evaluate_restriction(cute_version_t* version) {
 	switch (version->restriction) {
 		case VERSION_EQUALS:
 			break;
