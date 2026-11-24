@@ -385,7 +385,10 @@ semver_t semver_new() {
 semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* semver) {
 	// taken from is_valid_semver
 
-	if (string == NULL || string[0] == '\0')
+	if (semver == NULL || string == NULL || string[0] == '\0')
+		return SEMVER_INVALID;
+
+	if (!semver_is_valid_semver(string, length))
 		return SEMVER_INVALID;
 
 	bool found_symbol = false;
