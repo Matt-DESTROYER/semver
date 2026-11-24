@@ -443,7 +443,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 		} else {
 			size_t prerelease_end = (build_start > prerelease_start ? build_start : i) - prerelease_start;
 
-			semver->prerelease_metadata = (char*)malloc(sizeof(char*) * (prerelease_end + 1));
+			semver->prerelease_metadata = (char*)malloc(sizeof(char) * (prerelease_end + 1));
 			if (semver->prerelease_metadata == NULL)
 				return SEMVER_ERROR_MEMORY;
 
@@ -456,7 +456,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 			if (!semver_is_build((const char*)(string + build_start + 1), i - build_start - 1))
 				return SEMVER_INVALID;
 
-			semver->build_metadata = (char*)malloc(sizeof(char*) * (i - build_start + 1));
+			semver->build_metadata = (char*)malloc(sizeof(char) * (i - build_start + 1));
 			if (semver->build_metadata == NULL)
 				return SEMVER_ERROR_MEMORY;
 
