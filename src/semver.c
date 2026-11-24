@@ -265,6 +265,8 @@ bool semver_is_valid_semver(const char* string, size_t length) {
 
 			if (!semver_is_version_core(string, i))
 				return false;
+
+			found_symbol = true;
 		} else if (string[i] == SEMVER_BUILD_SYM) {
 			if (!found_symbol) {
 				if (!semver_is_version_core(string, i))
@@ -279,10 +281,10 @@ bool semver_is_valid_semver(const char* string, size_t length) {
 				if (!semver_is_pre_release((const char*)(string + prev_symbol + 1), i - prev_symbol - 1))
 					return false;
 			}
+			found_symbol = true;
 		}
 
 		prev_symbol = i;
-		found_symbol = true;
 	}
 
 	if (found_symbol) {
@@ -405,6 +407,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 				return SEMVER_INVALID;
 
 			prerelease_start = i;
+			found_symbol = true;
 		} else if (string[i] == SEMVER_BUILD_SYM) {
 			if (!found_symbol) {
 				if (!semver_is_version_core(string, i))
@@ -421,9 +424,8 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 			}
 
 			build_start = i;
+			found_symbol = true;
 		}
-
-		found_symbol = true;
 	}
 
 	if (!found_symbol) {
