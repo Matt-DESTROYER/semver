@@ -379,101 +379,65 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 	if (!semver_is_valid_semver(string, length))
 		return SEMVER_INVALID;
 
+	semver_t parsed = semver_new();
+	
+	const char* build_metadata = memchr(
+		string,
+		SEMVER_BUILD_SYM,
+		length
+	);
+
+	size_t main_length = build_metadata != NULL ? (size_t)(build_metadata - string) : length;
+
+	const char* prerelease_metadata = memchr(
+		string,
+		SEMVER_PRERELEASE_SYM,
+		main_length
+	);
+
+	size_t core_length = prerelease_metadata != NULL ? (size_t)(prerelease_metadata - string) : main_length;
+
+	parsed.version = version_parse(string, core_length);
+
+	if (prerelease_metadata != NULL) {
+		size_t prerelease_length = main_length - core_length - 1;
+
+		parsed.prerelease_metadata = malloc(sizeof(char) * (prerelease_length + 1));
+		if (parsed.prerelease_metadata == NULL) {
+			semver_free(&parsed);
+			return SEMVER_ERROR_MEMORY;
+		}
+
+		memcpy(
+			parsed.prerelease_metadata,
+			(const void*)(prerelease_metadata + 1),
+			prerelease_length
+		);
+
+		parsed.prerelease_metadata[prerelease_length] = '\0';
+	}
+
+	if (build_metadata != NULL) {
+		size_t build_length = length - (size_t)(build_metadata - string) - 1;
+
+		parsed.build_metadata = malloc(sizeof(char) * (build_length + 1));
+		if (parsed.build_metadata == NULL) {
+			semver_free(&parsed);
+			return SEMVER_ERROR_MEMORY;
+		}
+
+		memcpy(
+			parsed.build_metadata,
+			(const void*)(build_metadata + 1),
+			build_length
+		);
+
+		parsed.build_metadata[build_length] = '\0';
+	}
+
 	semver_free(semver);
 
-	bool found_symbol = false;
-	size_t prerelease_start = 0;
-	size_t build_start = 0;
-	size_t i = 0;
-	for (; i < length; i++) {
-		if (string[i] == SEMVER_PRERELEASE_SYM) {
-			// spec doesn't allow build then pre-release
-			if (found_symbol)
-				return SEMVER_INVALID;
-
-			if (!semver_is_version_core(string, i))
-				return SEMVER_INVALID;
-
-			prerelease_start = i;
-			found_symbol = true;
-		} else if (string[i] == SEMVER_BUILD_SYM) {
-			if (!found_symbol) {
-				if (!semver_is_version_core(string, i))
-					return SEMVER_INVALID;
-			} else {
-				if (string[prerelease_start] != SEMVER_PRERELEASE_SYM)
-					return SEMVER_INVALID;
-
-				if (prerelease_start + 1 >= i)
-					return SEMVER_INVALID;
-
-				if (!semver_is_pre_release((const char*)(string + prerelease_start + 1), i - prerelease_start - 1))
-					return SEMVER_INVALID;
-			}
-
-			build_start = i;
-			found_symbol = true;
-		}
-	}
-
-	if (!found_symbol) {
-		version_t version = version_parse(string, i);
-		semver->version = version;
-		return SEMVER_VALID;
-	}
-
-	version_t version = version_parse(string, prerelease_start != 0 ? prerelease_start : build_start);
-	semver->version = version;
-
-	if (found_symbol) {
-		if (prerelease_start != 0) {
-			size_t prerelease_end = build_start > prerelease_start ? build_start : i;
-			size_t prerelease_length = prerelease_end - prerelease_start - 1;
-
-			if (!semver_is_pre_release(
-				(const char*)(string + prerelease_start + 1),
-				prerelease_length
-			))
-				return SEMVER_INVALID;
-
-			semver->prerelease_metadata = (char*)malloc(sizeof(char) * (prerelease_length + 1));
-			if (semver->prerelease_metadata == NULL)
-				return SEMVER_ERROR_MEMORY;
-
-			memcpy(
-				semver->prerelease_metadata,
-				(char*)(string + prerelease_start + 1),
-				prerelease_length
-			);
-
-			semver->prerelease_metadata[prerelease_length] = '\0';
-		}
-		if (build_start != 0) {
-			size_t build_end = i;
-			size_t build_length = build_end - build_start - 1;
-
-			if (!semver_is_build(
-				(const char*)(string + build_start + 1),
-				build_length
-			))
-				return SEMVER_INVALID;
-
-			semver->build_metadata = (char*)malloc(sizeof(char) * (build_length + 1));
-			if (semver->build_metadata == NULL) {
-				free(semver->prerelease_metadata);
-				semver->prerelease_metadata = NULL;
-				return SEMVER_ERROR_MEMORY;
-			}
-
-			memcpy(
-				semver->build_metadata,
-				(char*)(string + build_start + 1),
-				build_length
-			);
-
-			semver->build_metadata[build_length] = '\0';
-		}
-	}
+	*semver = parsed;
 
 	return SEMVER_VALID;
 }

@@ -391,6 +391,37 @@ CUTE_TEST(reject_missing_core_components) {
 	);
 }
 
+CUTE_TEST(parse_replaces_existing_metadata) {
+	semver_t semver = semver_new();
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-alpha+build",
+			LEN("1.2.3-alpha+build"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"4.5.6",
+			LEN("4.5.6"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+
+	CUTE_ASSERT_NULL(semver.prerelease_metadata);
+	CUTE_ASSERT_NULL(semver.build_metadata);
+
+	CUTE_ASSERT_EQ(semver.version.major.number, 4);
+	CUTE_ASSERT_EQ(semver.version.minor.number, 5);
+	CUTE_ASSERT_EQ(semver.version.patch.number, 6);
+
+	semver_free(&semver);
+}
+
 int main(void) {
 	CUTE_RUN(parse_core_version);
 	CUTE_RUN(parse_zero_version);
@@ -408,6 +439,7 @@ int main(void) {
 	CUTE_RUN(parse_long_metadata);
 	CUTE_RUN(reject_core_leading_zeroes);
 	CUTE_RUN(reject_missing_core_components);
+	CUTE_RUN(parse_replaces_existing_metadata);
 
 	return cute_test_finish();
 }
