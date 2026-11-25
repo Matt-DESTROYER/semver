@@ -254,49 +254,36 @@ bool semver_is_valid_semver(const char* string, size_t length) {
 	if (string == NULL || length == 0)
 		return false;
 
-	bool found_symbol = false;
-	size_t prev_symbol = 0;
-	size_t i = 0;
-	for (; i < length; i++) {
-		if (!found_symbol && string[i] == SEMVER_PRERELEASE_SYM) {
-			// spec doesn't allow build then pre-release
-			if (found_symbol)
-				return false;
+	const char* build_metadata = memchr(
+		string,
+		SEMVER_BUILD_SYM,
+		length
+	);
 
-			if (!semver_is_version_core(string, i))
-				return false;
+	size_t main_length = build_metadata != NULL ? (size_t)(build_metadata - string) : length;
 
-			found_symbol = true;
-			prev_symbol = i;
-		} else if (string[i] == SEMVER_BUILD_SYM) {
-			if (!found_symbol) {
-				if (!semver_is_version_core(string, i))
-					return false;
-			} else {
-				if (string[prev_symbol] != SEMVER_PRERELEASE_SYM)
-					return false;
-
-				if (prev_symbol + 1 >= i)
-					return false;
-
-				if (!semver_is_pre_release((const char*)(string + prev_symbol + 1), i - prev_symbol - 1))
-					return false;
-			}
-
-			found_symbol = true;
-			prev_symbol = i;
-		}
+	if (build_metadata != NULL) {
+		if (!semver_is_build(
+			(const char*)(build_metadata + 1),
+			length - main_length - 1
+		))
+			return false;
 	}
 
-	if (found_symbol) {
-		if (string[prev_symbol] == SEMVER_PRERELEASE_SYM) {
-			return semver_is_pre_release((const char*)(string + prev_symbol + 1), i - prev_symbol - 1);
-		} else if (string[prev_symbol] == SEMVER_BUILD_SYM) {
-			return semver_is_build((const char*)(string + prev_symbol + 1), i - prev_symbol - 1);
-		}
-	}
+	const char* prerelease_metadata = memchr(
+		string,
+		SEMVER_PRERELEASE_SYM,
+		main_length
+	);
 
-	return semver_is_version_core(string, i);
+	if (prerelease_metadata == NULL)
+		return semver_is_version_core(string, main_length);
+
+	size_t core_length = (size_t)(prerelease_metadata - string);
+	size_t prerelease_length = main_length - core_length - 1;
+
+	return semver_is_version_core(string, core_length)
+		&& semver_is_pre_release((const char*)(prerelease_metadata + 1), prerelease_length);
 }
 
 // ======================================================================

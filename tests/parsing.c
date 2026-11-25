@@ -401,6 +401,13 @@ int main(void) {
 	CUTE_RUN(reject_invalid_versions);
 	CUTE_RUN(parse_null_arguments);
 	CUTE_RUN(free_metadata);
+	CUTE_RUN(parse_metadata_with_hyphens);
+	CUTE_RUN(parse_multiple_metadata_identifiers);
+	CUTE_RUN(parse_metadata_boundaries);
+	CUTE_RUN(reject_empty_metadata);
+	CUTE_RUN(parse_long_metadata);
+	CUTE_RUN(reject_core_leading_zeroes);
+	CUTE_RUN(reject_missing_core_components);
 
 	return cute_test_finish();
 }

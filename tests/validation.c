@@ -132,17 +132,37 @@ CUTE_TEST(reject_invalid_metadata_characters) {
 	INVALID("1.2.3+build/123");
 }
 
+CUTE_TEST(valid_hyphenated_metadata) {
+	VALID("1.0.0-alpha-beta");
+	VALID("1.0.0-alpha-beta-gamma");
+	VALID("1.0.0+build-metadata");
+	VALID("1.0.0+build-123");
+	VALID("1.0.0-alpha-beta+build-metadata");
+	VALID("1.0.0-rc-1+sha-abcdef");
+}
+
+CUTE_TEST(invalid_embedded_null) {
+	const char version[] = "1.0.0\0-invalid";
+
+	CUTE_ASSERT(!semver_is_valid_semver(
+		version,
+		sizeof(version) - 1
+	));
+}
+
 int main(void) {
 	CUTE_RUN(valid_core_versions);
 	CUTE_RUN(valid_prerelease_versions);
 	CUTE_RUN(valid_build_versions);
 	CUTE_RUN(valid_combined_metadata);
+	CUTE_RUN(valid_hyphenated_metadata);
 
 	CUTE_RUN(invalid_core_versions);
 	CUTE_RUN(invalid_prerelease_versions);
 	CUTE_RUN(invalid_build_versions);
 	CUTE_RUN(invalid_metadata_order);
 	CUTE_RUN(invalid_characters);
+	CUTE_RUN(invalid_embedded_null);
 
 	return cute_test_finish();
 }
