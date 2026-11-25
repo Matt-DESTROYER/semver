@@ -258,7 +258,7 @@ bool semver_is_valid_semver(const char* string, size_t length) {
 	size_t prev_symbol = 0;
 	size_t i = 0;
 	for (; i < length; i++) {
-		if (string[i] == SEMVER_PRERELEASE_SYM) {
+		if (!found_symbol && string[i] == SEMVER_PRERELEASE_SYM) {
 			// spec doesn't allow build then pre-release
 			if (found_symbol)
 				return false;

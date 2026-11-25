@@ -106,7 +106,7 @@ void semver_free(semver_t* semver);
 
 cute_version_t cute_version_new(void);
 void cute_version_evaluate_restriction(cute_version_t* version);
-void cute_version_free();
+void cute_version_free(cute_version_t* version);
 
 int version_cmp(const version_t* x, const version_t* y);
 int semver_cmp(const semver_t* x, const semver_t* y);
