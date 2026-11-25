@@ -447,7 +447,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 			if (semver->prerelease_metadata == NULL)
 				return SEMVER_ERROR_MEMORY;
 
-			for (size_t j = prerelease_start; j < prerelease_end; j++) {
+			for (size_t j = prerelease_start + 1; j < prerelease_end; j++) {
 				semver->prerelease_metadata[j - prerelease_start] = string[j];
 			}
 			semver->prerelease_metadata[prerelease_end - prerelease_start] = '\0';
@@ -462,7 +462,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 			if (semver->build_metadata == NULL)
 				return SEMVER_ERROR_MEMORY;
 
-			for (size_t j = build_start; j < build_end; j++) {
+			for (size_t j = build_start + 1; j < build_end; j++) {
 				semver->build_metadata[j - build_start] = string[j];
 			}
 			semver->build_metadata[build_end - build_start] = '\0';
