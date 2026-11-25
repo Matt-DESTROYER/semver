@@ -6,14 +6,6 @@
 
 #include "semver.h"
 
-semver_str_slice_t semver_slice(const char* str, size_t start, size_t end) {
-	return (semver_str_slice_t){
-		.str = str,
-		.start = start,
-		.end = end
-	};
-}
-
 // based on Backus–Naur Form Grammar for Valid SemVer Versions
 // for semver 2.0.0
 // https://semver.org/spec/v2.0.0.html
@@ -329,80 +321,6 @@ semver_version_core_t semver_version_core_parse(const char* string, size_t lengt
 	return version;
 }
 
-cute_version_number_t cute_version_number_new() {
-	return (cute_version_number_t){
-		.type = VERSION_NUMBER_NONE,
-		.number = 0
-	};
-}
-
-cute_version_core_t cute_version_core_new() {
-	return (cute_version_core_t){
-		.major = cute_version_number_new(),
-		.minor = cute_version_number_new(),
-		.patch = cute_version_number_new()
-	};
-}
-
-cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
-	cute_version_core_t version = cute_version_core_new();
-
-	unsigned short int parts_found = 0;
-	for (size_t i = 0; i < length; i++) {
-		if (string[i] == SEMVER_DOT) {
-			parts_found++;
-			continue;
-		}
-
-		if (string[i] == SEMVER_WILDCARD) {
-			switch (parts_found) {
-				case 0:
-					version.major.type = VERSION_NUMBER_ANY;
-					break;
-				case 1:
-					version.minor.type = VERSION_NUMBER_ANY;
-					break;
-				case 2:
-					version.patch.type = VERSION_NUMBER_ANY;
-					break;
-				default:
-					return version;
-			}
-		}
-
-		if (string[i] < '0' || string[i] > '9')
-			continue;
-
-		size_t digit = (size_t)(string[i] - '0');
-		switch (parts_found) {
-			case 0:
-				version.major.number = version.major.number * 10 + digit;
-				version.major.type = VERSION_NUMBER_EXPLICIT;
-				break;
-			case 1:
-				version.minor.number = version.minor.number * 10 + digit;
-				version.minor.type = VERSION_NUMBER_EXPLICIT;
-				break;
-			case 2:
-				version.patch.number = version.patch.number * 10 + digit;
-				version.patch.type = VERSION_NUMBER_EXPLICIT;
-				break;
-			default:
-				return version;
-		
-		}
-	}
-
-	if (parts_found < 2)
-		version.patch.type = VERSION_NUMBER_NONE;
-	if (parts_found < 1)
-		version.minor.type = VERSION_NUMBER_NONE;
-	if (parts_found < 0)
-		version.major.type = VERSION_NUMBER_NONE;
-
-	return version;
-}
-
 semver_t semver_new() {
 	return (semver_t){
 		.version = semver_version_core_new(),
@@ -487,33 +405,268 @@ void semver_free(semver_t* semver) {
 	if (semver == NULL)
 		return;
 
-	semver->version = semver_version_core_new();
-
 	free(semver->prerelease_metadata);
-	semver->prerelease_metadata = NULL;
-
 	free(semver->build_metadata);
-	semver->build_metadata = NULL;
+
+	*semver = semver_new();
+}
+
+cute_version_number_t cute_version_number_new() {
+	return (cute_version_number_t){
+		.type = VERSION_NUMBER_NONE,
+		.number = 0
+	};
+}
+
+cute_version_core_t cute_version_core_new() {
+	return (cute_version_core_t){
+		.major = cute_version_number_new(),
+		.minor = cute_version_number_new(),
+		.patch = cute_version_number_new()
+	};
+}
+
+cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
+	cute_version_core_t version = cute_version_core_new();
+
+	unsigned short int parts_found = 0;
+	for (size_t i = 0; i < length; i++) {
+		if (string[i] == SEMVER_DOT) {
+			parts_found++;
+			continue;
+		}
+
+		if (string[i] == SEMVER_WILDCARD) {
+			switch (parts_found) {
+				case 0:
+					version.major.type = VERSION_NUMBER_ANY;
+					break;
+				case 1:
+					version.minor.type = VERSION_NUMBER_ANY;
+					break;
+				case 2:
+					version.patch.type = VERSION_NUMBER_ANY;
+					break;
+				default:
+					return version;
+			}
+		}
+
+		if (string[i] < '0' || string[i] > '9')
+			continue;
+
+		size_t digit = (size_t)(string[i] - '0');
+		switch (parts_found) {
+			case 0:
+				version.major.number = version.major.number * 10 + digit;
+				version.major.type = VERSION_NUMBER_EXPLICIT;
+				break;
+			case 1:
+				version.minor.number = version.minor.number * 10 + digit;
+				version.minor.type = VERSION_NUMBER_EXPLICIT;
+				break;
+			case 2:
+				version.patch.number = version.patch.number * 10 + digit;
+				version.patch.type = VERSION_NUMBER_EXPLICIT;
+				break;
+			default:
+				return version;
+		
+		}
+	}
+
+	if (parts_found < 2)
+		version.patch.type = VERSION_NUMBER_NONE;
+	if (parts_found < 1)
+		version.minor.type = VERSION_NUMBER_NONE;
+	if (parts_found < 0)
+		version.major.type = VERSION_NUMBER_NONE;
+
+	return version;
+}
+
+cute_version_t cute_version_new() {
+	return (cute_version_t){
+		.version = cute_version_core_new(),
+
+		.restriction = CUTE_VERSION_ANY,
+		.min = cute_version_core_new(),
+		.min_inclusive = true,
+		.max = cute_version_core_new(),
+		.max_inclusive = true,
+
+		.prerelease_metadata = NULL,
+		.build_metadata = NULL
+	};
+}
+
+bool cute_version_str_starts_with(const char* string, const char* substr) {
+	size_t i = 0;
+	for (; substr[i] != '\0'; i++) {
+		if (string[i] == '\0'
+				|| substr[i] != string[i])
+			return false;
+	}
+	return true;
+}
+
+cute_version_parse_status_t cute_version_parse(const char *string, size_t length, cute_version_t *version) {
+	// taken from semver_parse
+
+	if (version == NULL || string == NULL)
+		return CUTE_VERSION_INVALID;
+
+	cute_version_t parsed = cute_version_new();
+
+	// first we need to find the restriction if there is one
+	// the end of the restriction operator is the beginning for the
+	// rest of the version string
+	const char* restriction_operator;
+	if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_EQUALS_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_EQUALS_SYM;
+		parsed.restriction = CUTE_VERSION_EQUALS;
+	} else if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_MIN_INC_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_MIN_INC_SYM;
+		parsed.restriction = CUTE_VERSION_MIN_INC;
+	} else if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_MAX_INC_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_MAX_INC_SYM;
+		parsed.restriction = CUTE_VERSION_MAX_INC;
+	} else if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_MIN_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_MIN_SYM;
+		parsed.restriction = CUTE_VERSION_MIN;
+	} else if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_MAX_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_MAX_SYM;
+		parsed.restriction = CUTE_VERSION_MAX;
+	} else if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_LOCK_MOST_SIGNIFICANT_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_LOCK_MOST_SIGNIFICANT_SYM;
+		parsed.restriction = CUTE_VERSION_LOCK_MOST_SIGNIFICANT;
+	} else if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT_SYM;
+		parsed.restriction = CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT;
+	} else if (cute_version_str_starts_with(
+		string,
+		CUTE_VERSION_ANY_SYM
+	)) {
+		restriction_operator = CUTE_VERSION_ANY_SYM;
+		parsed.restriction = CUTE_VERSION_ANY;
+	} else {
+		restriction_operator = NULL;
+	}
+
+	string = (const char*)(string + strlen(restriction_operator));
+
+	const char* build_metadata = memchr(
+		string,
+		SEMVER_BUILD_SYM,
+		length
+	);
+
+	size_t main_length = build_metadata != NULL ? (size_t)(build_metadata - string) : length;
+
+	const char* prerelease_metadata = memchr(
+		string,
+		SEMVER_PRERELEASE_SYM,
+		main_length
+	);
+
+	size_t core_length = prerelease_metadata != NULL ? (size_t)(prerelease_metadata - string) : main_length;
+
+	parsed.version = cute_version_core_parse(string, core_length);
+
+	if (prerelease_metadata != NULL) {
+		size_t prerelease_length = main_length - core_length - 1;
+
+		parsed.prerelease_metadata = malloc(sizeof(char) * (prerelease_length + 1));
+		if (parsed.prerelease_metadata == NULL) {
+			cute_version_free(&parsed);
+			return CUTE_VERSION_ERROR_MEMORY;
+		}
+
+		memcpy(
+			parsed.prerelease_metadata,
+			(const void*)(prerelease_metadata + 1),
+			prerelease_length
+		);
+
+		parsed.prerelease_metadata[prerelease_length] = '\0';
+	}
+
+	if (build_metadata != NULL) {
+		size_t build_length = length - (size_t)(build_metadata - string) - 1;
+
+		parsed.build_metadata = malloc(sizeof(char) * (build_length + 1));
+		if (parsed.build_metadata == NULL) {
+			cute_version_free(&parsed);
+			return CUTE_VERSION_ERROR_MEMORY;
+		}
+
+		memcpy(
+			parsed.build_metadata,
+			(const void*)(build_metadata + 1),
+			build_length
+		);
+
+		parsed.build_metadata[build_length] = '\0';
+	}
+
+	cute_version_evaluate_restriction(&parsed);
+
+	cute_version_free(version);
+
+	*version = parsed;
+
+	return CUTE_VERSION_VALID;
+}
+
+void cute_version_free(cute_version_t* version) {
+	if (version == NULL)
+		return;
+
+	free(version->prerelease_metadata);
+	free(version->build_metadata);
+
+	*version = cute_version_new();
 }
 
 // TODO:
 void cute_version_evaluate_restriction(cute_version_t* version) {
 	switch (version->restriction) {
-		case VERSION_EQUALS:
+		case CUTE_VERSION_EQUALS:
 			break;
-		case VERSION_MIN_INC:
+		case CUTE_VERSION_MIN_INC:
 			break;
-		case VERSION_MAX_INC:
+		case CUTE_VERSION_MAX_INC:
 			break;
-		case VERSION_MIN:
+		case CUTE_VERSION_MIN:
 			break;
-		case VERSION_MAX:
+		case CUTE_VERSION_MAX:
 			break;
-		case VERSION_LOCK_MOST_SIGNIFICANT:
+		case CUTE_VERSION_LOCK_MOST_SIGNIFICANT:
 			break;
-		case VERSION_ALLOW_LEAST_SIGNIFICANT:
+		case CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT:
 			break;
-		case VERSION_ANY:
+		case CUTE_VERSION_ANY:
 			break;
 	}
 }

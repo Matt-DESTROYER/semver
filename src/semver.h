@@ -9,21 +9,24 @@
 #define SEMVER_BUILD_SYM      '+'
 #define SEMVER_WILDCARD       '*'
 
-typedef struct semver_str_slice {
-	const char* str;
-	size_t start;
-	size_t end;
-} semver_str_slice_t;
+#define CUTE_VERSION_EQUALS_SYM                  "="
+#define CUTE_VERSION_MIN_INC_SYM                 ">="
+#define CUTE_VERSION_MAX_INC_SYM                 "<="
+#define CUTE_VERSION_MIN_SYM                     ">"
+#define CUTE_VERSION_MAX_SYM                     "<"
+#define CUTE_VERSION_LOCK_MOST_SIGNIFICANT_SYM   "^"
+#define CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT_SYM "~"
+#define CUTE_VERSION_ANY_SYM                     "*"
 
 typedef enum version_restriction {
-	VERSION_EQUALS,                  // =
-	VERSION_MIN_INC,                 // >=
-	VERSION_MAX_INC,                 // <=
-	VERSION_MIN,                     // >
-	VERSION_MAX,                     // <
-	VERSION_LOCK_MOST_SIGNIFICANT,   // ^
-	VERSION_ALLOW_LEAST_SIGNIFICANT, // ~
-	VERSION_ANY                      // *
+	CUTE_VERSION_EQUALS,                  // =
+	CUTE_VERSION_MIN_INC,                 // >=
+	CUTE_VERSION_MAX_INC,                 // <=
+	CUTE_VERSION_MIN,                     // >
+	CUTE_VERSION_MAX,                     // <
+	CUTE_VERSION_LOCK_MOST_SIGNIFICANT,   // ^
+	CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT, // ~
+	CUTE_VERSION_ANY                      // *
 } version_restriction_t;
 
 typedef enum version_number_type {
@@ -74,6 +77,12 @@ typedef enum semver_parse_status {
 	SEMVER_ERROR_MEMORY
 } semver_parse_status_t;
 
+typedef enum cute_version_parse_status {
+	CUTE_VERSION_VALID,
+	CUTE_VERSION_INVALID,
+	CUTE_VERSION_ERROR_MEMORY
+} cute_version_parse_status_t;
+
 // based on Backus–Naur Form Grammar for Valid SemVer Versions
 // for semver 2.0.0
 // https://semver.org/spec/v2.0.0.html
@@ -111,6 +120,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 void semver_free(semver_t* semver);
 
 cute_version_t cute_version_new(void);
+cute_version_parse_status_t cute_version_parse(const char* string, size_t length, cute_version_t* version);
 void cute_version_evaluate_restriction(cute_version_t* version);
 void cute_version_free(cute_version_t* version);
 
