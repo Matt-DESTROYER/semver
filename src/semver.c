@@ -352,11 +352,11 @@ version_t version_parse(const char *string, size_t length) {
 		}
 	}
 
-	if (parts_found < 3)
-		version.patch.type = VERSION_NUMBER_NONE;
 	if (parts_found < 2)
-		version.minor.type = VERSION_NUMBER_NONE;
+		version.patch.type = VERSION_NUMBER_NONE;
 	if (parts_found < 1)
+		version.minor.type = VERSION_NUMBER_NONE;
+	if (parts_found < 0)
 		version.major.type = VERSION_NUMBER_NONE;
 
 	return version;
