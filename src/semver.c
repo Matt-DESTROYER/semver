@@ -288,23 +288,64 @@ bool semver_is_valid_semver(const char* string, size_t length) {
 
 // ======================================================================
 
-version_number_t version_number_new() {
-	return (version_number_t){
+semver_version_core_t semver_version_core_new() {
+	return (semver_version_core_t){
+		.major = 0,
+		.minor = 0,
+		.patch = 0
+	};
+}
+
+semver_version_core_t semver_version_core_parse(const char* string, size_t length) {
+	semver_version_core_t version = semver_version_core_new();
+
+	unsigned short int parts_found = 0;
+	for (size_t i = 0; i < length; i++) {
+		if (string[i] == SEMVER_DOT) {
+			parts_found++;
+			continue;
+		}
+
+		if (string[i] < '0' || string[i] > '9')
+			continue;
+
+		size_t digit = (size_t)(string[i] - '0');
+		switch (parts_found) {
+			case 0:
+				version.major = version.major * 10 + digit;
+				break;
+			case 1:
+				version.minor = version.minor * 10 + digit;
+				break;
+			case 2:
+				version.patch = version.patch * 10 + digit;
+				break;
+			default:
+				return version;
+		
+		}
+	}
+
+	return version;
+}
+
+cute_version_number_t cute_version_number_new() {
+	return (cute_version_number_t){
 		.type = VERSION_NUMBER_NONE,
 		.number = 0
 	};
 }
 
-version_t version_new() {
-	return (version_t){
-		.major = version_number_new(),
-		.minor = version_number_new(),
-		.patch = version_number_new()
+cute_version_core_t cute_version_core_new() {
+	return (cute_version_core_t){
+		.major = cute_version_number_new(),
+		.minor = cute_version_number_new(),
+		.patch = cute_version_number_new()
 	};
 }
 
-version_t version_parse(const char *string, size_t length) {
-	version_t version = version_new();
+cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
+	cute_version_core_t version = cute_version_core_new();
 
 	unsigned short int parts_found = 0;
 	for (size_t i = 0; i < length; i++) {
@@ -364,7 +405,7 @@ version_t version_parse(const char *string, size_t length) {
 
 semver_t semver_new() {
 	return (semver_t){
-		.version = version_new(),
+		.version = semver_version_core_new(),
 		.prerelease_metadata = NULL,
 		.build_metadata = NULL
 	};
@@ -397,7 +438,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 
 	size_t core_length = prerelease_metadata != NULL ? (size_t)(prerelease_metadata - string) : main_length;
 
-	parsed.version = version_parse(string, core_length);
+	parsed.version = semver_version_core_parse(string, core_length);
 
 	if (prerelease_metadata != NULL) {
 		size_t prerelease_length = main_length - core_length - 1;
@@ -446,7 +487,7 @@ void semver_free(semver_t* semver) {
 	if (semver == NULL)
 		return;
 
-	semver->version = version_new();
+	semver->version = semver_version_core_new();
 
 	free(semver->prerelease_metadata);
 	semver->prerelease_metadata = NULL;
@@ -485,26 +526,32 @@ int size_t_cmp(size_t x, size_t y) {
 	return -1;
 }
 
-// TODO:
-/*
-int version_cmp(const version_t* x, const version_t* y);
-int _version_cmp(const void* x, const void* y) {
-	return version_cmp((const version_t*)x, (const version_t*)y);
+int semver_version_core_cmp(const semver_version_core_t* x, const semver_version_core_t* y) {
+	if (x->major != y->major)
+		return size_t_cmp(x->major, y->major);
+
+	if (x->minor != y->minor)
+		return size_t_cmp(x->minor, y->minor);
+
+	return size_t_cmp(x->patch, y->patch);
+}
+int _semver_version_core_cmp(const void* x, const void* y) {
+	return semver_version_core_cmp((const semver_version_core_t*)x, (const semver_version_core_t*)y);
 }
 
-int semver_cmp(const semver_t* x, const semver_t* y);
+int semver_cmp(const semver_t* x, const semver_t* y) {
+	int version_diff = semver_version_core_cmp(&x->version, &y->version);
+
+	// TODO: account for prerelease and build metadata as per SemVer 2.0.0 spec
+
+	return version_diff;
+}
 int _semver_cmp(const void* x, const void* y) {
 	return semver_cmp((const semver_t*)x, (const semver_t*)y);
 }
-
-void sort_versions(version_t* versions, size_t count) {
-	qsort(versions, count, sizeof(version_t), _version_cmp);
-}
-
 void sort_semvers(semver_t* semvers, size_t count) {
 	qsort(semvers, count, sizeof(semver_t), _semver_cmp);
 }
-*/
 
 // TODO:
 //bool semver_satisfied(const semver_t* req, const version_t* installed);

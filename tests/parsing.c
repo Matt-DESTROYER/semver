@@ -10,18 +10,17 @@ CUTE_TEST(parse_core_version) {
 	semver_t version = semver_new();
 
 	CUTE_ASSERT_EQ(
-		semver_parse("1.2.3", LEN("1.2.3"), &version),
+		semver_parse(
+			"1.2.3",
+			LEN("1.2.3"),
+			&version
+		),
 		SEMVER_VALID
 	);
 
-	CUTE_ASSERT_EQ(version.version.major.type, VERSION_NUMBER_EXPLICIT);
-	CUTE_ASSERT_EQ(version.version.major.number, 1);
-
-	CUTE_ASSERT_EQ(version.version.minor.type, VERSION_NUMBER_EXPLICIT);
-	CUTE_ASSERT_EQ(version.version.minor.number, 2);
-
-	CUTE_ASSERT_EQ(version.version.patch.type, VERSION_NUMBER_EXPLICIT);
-	CUTE_ASSERT_EQ(version.version.patch.number, 3);
+	CUTE_ASSERT_EQ(version.version.major, 1);
+	CUTE_ASSERT_EQ(version.version.minor, 2);
+	CUTE_ASSERT_EQ(version.version.patch, 3);
 
 	CUTE_ASSERT_NULL(version.prerelease_metadata);
 	CUTE_ASSERT_NULL(version.build_metadata);
@@ -33,13 +32,17 @@ CUTE_TEST(parse_zero_version) {
 	semver_t version = semver_new();
 
 	CUTE_ASSERT_EQ(
-		semver_parse("0.0.0", LEN("0.0.0"), &version),
+		semver_parse(
+			"0.0.0",
+			LEN("0.0.0"),
+			&version
+		),
 		SEMVER_VALID
 	);
 
-	CUTE_ASSERT_EQ(version.version.major.number, 0);
-	CUTE_ASSERT_EQ(version.version.minor.number, 0);
-	CUTE_ASSERT_EQ(version.version.patch.number, 0);
+	CUTE_ASSERT_EQ(version.version.major, 0);
+	CUTE_ASSERT_EQ(version.version.minor, 0);
+	CUTE_ASSERT_EQ(version.version.patch, 0);
 
 	semver_free(&version);
 }
@@ -48,7 +51,11 @@ CUTE_TEST(parse_prerelease_metadata) {
 	semver_t version = semver_new();
 
 	CUTE_ASSERT_EQ(
-		semver_parse("1.2.3-alpha.1", LEN("1.2.3-alpha.1"), &version),
+		semver_parse(
+			"1.2.3-alpha.1",
+			LEN("1.2.3-alpha.1"),
+			&version
+		),
 		SEMVER_VALID
 	);
 
@@ -63,7 +70,11 @@ CUTE_TEST(parse_build_metadata) {
 	semver_t version = semver_new();
 
 	CUTE_ASSERT_EQ(
-		semver_parse("1.2.3+build.123", LEN("1.2.3+build.123"), &version),
+		semver_parse(
+			"1.2.3+build.123",
+			LEN("1.2.3+build.123"),
+			&version
+		),
 		SEMVER_VALID
 	);
 
@@ -163,9 +174,6 @@ CUTE_TEST(free_metadata) {
 
 	CUTE_ASSERT_NULL(version.prerelease_metadata);
 	CUTE_ASSERT_NULL(version.build_metadata);
-	CUTE_ASSERT_EQ(version.version.major.type, VERSION_NUMBER_NONE);
-	CUTE_ASSERT_EQ(version.version.minor.type, VERSION_NUMBER_NONE);
-	CUTE_ASSERT_EQ(version.version.patch.type, VERSION_NUMBER_NONE);
 }
 
 CUTE_TEST(parse_metadata_with_hyphens) {
@@ -415,9 +423,9 @@ CUTE_TEST(parse_replaces_existing_metadata) {
 	CUTE_ASSERT_NULL(semver.prerelease_metadata);
 	CUTE_ASSERT_NULL(semver.build_metadata);
 
-	CUTE_ASSERT_EQ(semver.version.major.number, 4);
-	CUTE_ASSERT_EQ(semver.version.minor.number, 5);
-	CUTE_ASSERT_EQ(semver.version.patch.number, 6);
+	CUTE_ASSERT_EQ(semver.version.major, 4);
+	CUTE_ASSERT_EQ(semver.version.minor, 5);
+	CUTE_ASSERT_EQ(semver.version.patch, 6);
 
 	semver_free(&semver);
 }
