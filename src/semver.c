@@ -464,8 +464,11 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 				return SEMVER_INVALID;
 
 			semver->build_metadata = (char*)malloc(sizeof(char) * (build_length + 1));
-			if (semver->build_metadata == NULL)
+			if (semver->build_metadata == NULL) {
+				free(semver->prerelease_metadata);
+				semver->prerelease_metadata = NULL;
 				return SEMVER_ERROR_MEMORY;
+			}
 
 			memcpy(
 				semver->build_metadata,
