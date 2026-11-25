@@ -123,7 +123,7 @@ bool semver_is_dot_separated_build_identifiers(const char* string, size_t length
 			if (
 				!semver_is_build_identifier(
 					seen_dot ? (const char*)(string + prev_dot + 1) : string,
-					seen_dot ? i - prev_dot + 1 : i
+					seen_dot ? i - prev_dot - 1 : i
 				)
 			)
 				return false;
@@ -138,7 +138,7 @@ bool semver_is_dot_separated_build_identifiers(const char* string, size_t length
 
 	return semver_is_build_identifier(
 		seen_dot ? (const char*)(string + prev_dot + 1) : string,
-		seen_dot ? i - prev_dot + 1 : i
+		seen_dot ? i - prev_dot - 1 : i
 	);
 }
 
@@ -167,7 +167,7 @@ bool semver_is_dot_separated_pre_release_identifiers(const char* string, size_t 
 			if (
 				!semver_is_pre_release_identifier(
 					seen_dot ? (const char*)(string + prev_dot + 1) : string,
-					seen_dot ? i - prev_dot + 1 : i
+					seen_dot ? i - prev_dot - 1 : i
 				)
 			)
 				return false;
@@ -182,7 +182,7 @@ bool semver_is_dot_separated_pre_release_identifiers(const char* string, size_t 
 
 	return semver_is_pre_release_identifier(
 		seen_dot ? (const char*)(string + prev_dot + 1) : string,
-		seen_dot ? i - prev_dot + 1 : i
+		seen_dot ? i - prev_dot - 1 : i
 	);
 }
 
