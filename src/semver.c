@@ -429,15 +429,15 @@ cute_version_core_t cute_version_core_new() {
 cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
 	cute_version_core_t version = cute_version_core_new();
 
-	unsigned short int parts_found = 0;
+	unsigned short int dots_found = 0;
 	for (size_t i = 0; i < length; i++) {
 		if (string[i] == SEMVER_DOT) {
-			parts_found++;
+			dots_found++;
 			continue;
 		}
 
 		if (string[i] == SEMVER_WILDCARD) {
-			switch (parts_found) {
+			switch (dots_found) {
 				case 0:
 					version.major.type = VERSION_NUMBER_ANY;
 					break;
@@ -447,6 +447,7 @@ cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
 				case 2:
 					version.patch.type = VERSION_NUMBER_ANY;
 					break;
+				// TODO: return status and throw invalid
 				default:
 					return version;
 			}
@@ -456,7 +457,7 @@ cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
 			continue;
 
 		size_t digit = (size_t)(string[i] - '0');
-		switch (parts_found) {
+		switch (dots_found) {
 			case 0:
 				version.major.number = version.major.number * 10 + digit;
 				version.major.type = VERSION_NUMBER_EXPLICIT;
@@ -469,18 +470,17 @@ cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
 				version.patch.number = version.patch.number * 10 + digit;
 				version.patch.type = VERSION_NUMBER_EXPLICIT;
 				break;
+			// TODO: return status and throw invalid
 			default:
 				return version;
 		
 		}
 	}
 
-	if (parts_found < 2)
+	if (dots_found < 2)
 		version.patch.type = VERSION_NUMBER_NONE;
-	if (parts_found < 1)
+	if (dots_found < 1)
 		version.minor.type = VERSION_NUMBER_NONE;
-	if (parts_found < 0)
-		version.major.type = VERSION_NUMBER_NONE;
 
 	return version;
 }
