@@ -444,23 +444,6 @@ cute_version_core_t cute_version_core_parse(const char* string, size_t length) {
 			continue;
 		}
 
-		if (string[i] == SEMVER_WILDCARD) {
-			switch (dots_found) {
-				case 0:
-					version.major.type = VERSION_NUMBER_ANY;
-					break;
-				case 1:
-					version.minor.type = VERSION_NUMBER_ANY;
-					break;
-				case 2:
-					version.patch.type = VERSION_NUMBER_ANY;
-					break;
-				// TODO: return status and throw invalid
-				default:
-					return version;
-			}
-		}
-
 		if (string[i] < '0' || string[i] > '9')
 			continue;
 

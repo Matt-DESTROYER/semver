@@ -9,7 +9,6 @@
 #define SEMVER_DOT            '.'
 #define SEMVER_PRERELEASE_SYM '-'
 #define SEMVER_BUILD_SYM      '+'
-#define SEMVER_WILDCARD       '*'
 
 #define CUTE_VERSION_EQUALS_SYM                  "="
 #define CUTE_VERSION_MIN_INC_SYM                 ">="
@@ -33,7 +32,6 @@ typedef enum version_restriction {
 
 typedef enum version_number_type {
 	VERSION_NUMBER_NONE,
-	VERSION_NUMBER_ANY,
 	VERSION_NUMBER_EXPLICIT
 } version_number_type_t;
 
