@@ -472,11 +472,11 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 
 			memcpy(
 				semver->build_metadata,
-				(char*)(string + build_start + i),
+				(char*)(string + build_start + 1),
 				build_length
 			);
 
-			semver->build_metadata[build_end - build_start] = '\0';
+			semver->build_metadata[build_length] = '\0';
 		}
 	}
 
