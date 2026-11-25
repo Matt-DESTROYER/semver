@@ -481,6 +481,9 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 }
 
 void semver_free(semver_t* semver) {
+	if (semver == NULL)
+		return;
+
 	semver->version = version_new();
 
 	free(semver->prerelease_metadata);
