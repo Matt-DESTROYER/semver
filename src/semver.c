@@ -392,6 +392,8 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 	if (!semver_is_valid_semver(string, length))
 		return SEMVER_INVALID;
 
+	semver_free(semver);
+
 	bool found_symbol = false;
 	size_t prerelease_start = 0;
 	size_t build_start = 0;
