@@ -574,8 +574,11 @@ cute_version_parse_status_t cute_version_parse(const char *string, size_t length
 		restriction_operator = NULL;
 	}
 
-	if (restriction_operator != NULL)
-		string = (const char*)(string + strlen(restriction_operator));
+	if (restriction_operator != NULL) {
+		size_t op_length = strlen(restriction_operator);
+		string = (const char*)(string + op_length);
+		length -= op_length;
+	}
 
 	const char* build_metadata = memchr(
 		string,
