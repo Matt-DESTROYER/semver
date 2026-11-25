@@ -120,6 +120,6 @@ int semver_cmp(const semver_t* x, const semver_t* y);
 void sort_semvers(semver_t* semvers, size_t count);
 void sort_cute_versions(cute_version_t* versions, size_t count);
 
-bool semver_satisfied(const semver_t* req, const semver_version_core_t* installed);
+bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* version);
 
 #endif

@@ -539,12 +539,109 @@ int _semver_version_core_cmp(const void* x, const void* y) {
 	return semver_version_core_cmp((const semver_version_core_t*)x, (const semver_version_core_t*)y);
 }
 
+size_t size_t_min(size_t x, size_t y) {
+	if (x < y)
+		return x;
+	return y;
+}
+
+int char_cmp(const char x, const char y) {
+	if (x == y)
+		return 0;
+	if (x > y)
+		return 1;
+	return -1;
+}
+
+int semver_pre_release_cmp(const char* x, const char* y) {
+	size_t x_dot_idx = 0;
+	size_t y_dot_idx = 0;
+
+	while (true) {
+		const char* x_dot_loc = strchr((const char*)(x + x_dot_idx), SEMVER_DOT);
+		const char* y_dot_loc = strchr((const char*)(y + y_dot_idx), SEMVER_DOT);
+
+		const char* x_identifier_end = (const char*)(
+			x_dot_loc != NULL
+			? x_dot_loc
+			: x + strlen(x)
+		);
+		const char* y_identifier_end = (const char*)(
+			y_dot_loc != NULL
+			? y_dot_loc
+			: y + strlen(y)
+		);
+
+		size_t x_identifier_start = x_dot_idx;
+		size_t y_identifier_start = y_dot_idx;
+
+		size_t x_identifier_length = (size_t)(x_identifier_end - (x + x_dot_idx));
+		size_t y_identifier_length = (size_t)(y_identifier_end - (y + y_dot_idx));
+
+		bool x_identifier_numeric = semver_is_numeric_identifier((const char*)(x + x_identifier_start), x_identifier_length);
+		bool y_identifier_numeric = semver_is_numeric_identifier((const char*)(y + y_identifier_start), y_identifier_length);
+
+		if (x_identifier_numeric && y_identifier_numeric) {
+			if (x_identifier_length < y_identifier_length)
+				return -1;
+			else if (x_identifier_length > y_identifier_length)
+				return 1;
+
+			for (size_t i = 0; i < x_identifier_length; i++) {
+				int char_diff = char_cmp(
+					*(x + x_identifier_start + i),
+					*(y + y_identifier_start + i)
+				);
+				if (char_diff != 0)
+					return char_diff;
+			}
+		} else if (x_identifier_numeric) {
+			return -1;
+		} else if (y_identifier_numeric) {
+			return 1;
+		} else {
+			size_t min_size = size_t_min(x_identifier_length, y_identifier_length);
+			for (size_t i = 0; i < min_size; i++) {
+				int char_diff = char_cmp(
+					*(x + x_identifier_start + i),
+					*(y + y_identifier_start + i)
+				);
+				if (char_diff != 0)
+					return char_diff;
+			}
+			if (x_identifier_length < y_identifier_length)
+				return -1;
+			else if (x_identifier_length > y_identifier_length)
+				return 1;
+		}
+
+		if (x_dot_loc == NULL && y_dot_loc == NULL)
+			return 0;
+		if (x_dot_loc == NULL)
+			return -1;
+		if (y_dot_loc == NULL)
+			return 1;
+
+		x_dot_idx += x_identifier_length + 1;
+		y_dot_idx += y_identifier_length + 1;
+	}
+
+	return 0;
+}
+
 int semver_cmp(const semver_t* x, const semver_t* y) {
 	int version_diff = semver_version_core_cmp(&x->version, &y->version);
+	if (version_diff != 0)
+		return version_diff;
 
-	// TODO: account for prerelease and build metadata as per SemVer 2.0.0 spec
+	if (x->prerelease_metadata == NULL && y->prerelease_metadata == NULL)
+		return 0;
+	else if (x->prerelease_metadata == NULL)
+		return -1;
+	else if (y->prerelease_metadata == NULL)
+		return 1;
 
-	return version_diff;
+	return semver_pre_release_cmp((const char*)x->prerelease_metadata, (const char*)y->prerelease_metadata);
 }
 int _semver_cmp(const void* x, const void* y) {
 	return semver_cmp((const semver_t*)x, (const semver_t*)y);
@@ -554,5 +651,5 @@ void sort_semvers(semver_t* semvers, size_t count) {
 }
 
 // TODO:
-//bool semver_satisfied(const semver_t* req, const version_t* installed);
+//bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* version);
 
