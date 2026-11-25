@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <copt.h>
+
 #include "semver.h"
 
 // based on Backus–Naur Form Grammar for Valid SemVer Versions
@@ -329,6 +331,12 @@ semver_t semver_new() {
 	};
 }
 
+semver_t semver_from_semver_version_core(semver_version_core_t version) {
+	semver_t semver = semver_new();
+	semver.version = version;
+	return semver;
+}
+
 semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* semver) {
 	// taken from is_valid_semver
 
@@ -490,9 +498,9 @@ cute_version_t cute_version_new() {
 		.version = cute_version_core_new(),
 
 		.restriction = CUTE_VERSION_ANY,
-		.min = cute_version_core_new(),
+		.min = option_none(),
 		.min_inclusive = true,
-		.max = cute_version_core_new(),
+		.max = option_none(),
 		.max_inclusive = true,
 
 		.prerelease_metadata = NULL,
@@ -650,27 +658,155 @@ void cute_version_free(cute_version_t* version) {
 	free(version->prerelease_metadata);
 	free(version->build_metadata);
 
+	free(option_unwrap_or(version->max, NULL));
+	free(option_unwrap_or(version->min, NULL));
+
 	*version = cute_version_new();
 }
 
-// TODO:
+semver_version_core_t cute_version_core_to_semver_version_core(const cute_version_core_t* version) {
+	semver_version_core_t semver = semver_version_core_new();
+
+	if (version->major.type == VERSION_NUMBER_EXPLICIT) {
+		semver.major = version->major.number;
+	} else {
+		semver.major = 0;
+	}
+
+	if (version->minor.type == VERSION_NUMBER_EXPLICIT) {
+		semver.minor = version->minor.number;
+	} else {
+		semver.minor = 0;
+	}
+
+	if (version->patch.type == VERSION_NUMBER_EXPLICIT) {
+		semver.patch = version->patch.number;
+	} else {
+		semver.patch = 0;
+	}
+
+	return semver;
+}
+
+semver_version_core_t* cute_version_caret_upper_bound(const cute_version_t* version) {
+	semver_version_core_t* max = (semver_version_core_t*)malloc(sizeof(semver_version_core_t));
+	if (max == NULL)
+		return NULL;
+
+	*max = semver_version_core_new();
+
+	unsigned short int most_significant = 0;
+	if (version->version.major.type != VERSION_NUMBER_EXPLICIT
+			|| version->version.major.number == 0)
+		most_significant++;
+	if (version->version.minor.type != VERSION_NUMBER_EXPLICIT
+			|| version->version.minor.number == 0)
+		most_significant++;
+
+	switch (most_significant) {
+		case 0:
+			max->major = version->version.major.number + 1;
+			break;
+		case 1:
+			max->minor = version->version.minor.number + 1;
+			break;
+		default:
+			max->patch = version->version.patch.number + 1;
+			break;
+	}
+
+	return max;
+}
+
+semver_version_core_t* cute_version_tilde_upper_bound(const cute_version_t* version) {
+	semver_version_core_t* max = (semver_version_core_t*)malloc(sizeof(semver_version_core_t));
+	if (max == NULL)
+		return NULL;
+
+	*max = semver_version_core_new();
+
+	if (version->version.major.type == VERSION_NUMBER_EXPLICIT
+			&& version->version.minor.type != VERSION_NUMBER_EXPLICIT
+			&& version->version.patch.type != VERSION_NUMBER_EXPLICIT) {
+		max->major = version->version.major.number + 1;
+	} else {
+		if (version->version.major.type == VERSION_NUMBER_EXPLICIT)
+			max->major = version->version.major.number;
+
+		if (version->version.minor.type == VERSION_NUMBER_EXPLICIT) {
+			max->minor = version->version.minor.number + 1;
+		} else {
+			max->minor = 1;
+		}
+	}
+
+	return max;
+}
+
 void cute_version_evaluate_restriction(cute_version_t* version) {
+	semver_version_core_t* current_version = (semver_version_core_t*)malloc(sizeof(semver_version_core_t));
+	if (current_version == NULL)
+		return;
+
+	*current_version = cute_version_core_to_semver_version_core(&version->version);
+
+	semver_version_core_t* upper_bound;
 	switch (version->restriction) {
 		case CUTE_VERSION_EQUALS:
+			version->max_inclusive = true;
+			version->min_inclusive = true;
+			version->max = option_none();
+			version->min = option_none();
+			free(current_version);
 			break;
 		case CUTE_VERSION_MIN_INC:
+			version->max_inclusive = false;
+			version->min_inclusive = true;
+			version->max = option_none();
+			version->min = option_some(current_version);
 			break;
 		case CUTE_VERSION_MAX_INC:
+			version->max_inclusive = true;
+			version->min_inclusive = false;
+			version->max = option_some(current_version);
+			version->min = option_none();
 			break;
 		case CUTE_VERSION_MIN:
+			version->max_inclusive = false;
+			version->min_inclusive = false;
+			version->max = option_none();
+			version->min = option_some(current_version);
 			break;
 		case CUTE_VERSION_MAX:
+			version->max_inclusive = false;
+			version->min_inclusive = false;
+			version->max = option_some(current_version);
+			version->min = option_none();
 			break;
 		case CUTE_VERSION_LOCK_MOST_SIGNIFICANT:
+			version->max_inclusive = false;
+			version->min_inclusive = true;
+			upper_bound = cute_version_caret_upper_bound(version);
+			if (upper_bound == NULL)
+				return;
+			version->max = option_some(upper_bound);
+			version->min = option_some(current_version);
 			break;
 		case CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT:
+			version->max_inclusive = false;
+			version->min_inclusive = true;
+			upper_bound = cute_version_tilde_upper_bound(version);
+			if (upper_bound == NULL)
+				return;
+			version->max = option_some(upper_bound);
+			version->min = option_some(current_version);
 			break;
 		case CUTE_VERSION_ANY:
+			version->max_inclusive = true;
+			version->min_inclusive = true;
+			version->max = option_none();
+			version->min = option_none();
+			free(current_version);
 			break;
 	}
 }
@@ -807,6 +943,37 @@ void sort_semvers(semver_t* semvers, size_t count) {
 	qsort(semvers, count, sizeof(semver_t), _semver_cmp);
 }
 
-// TODO:
-//bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* version);
+bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* version) {
+	if (requirement->restriction == CUTE_VERSION_EQUALS) {
+		semver_t required_version = semver_from_semver_version_core(
+			cute_version_core_to_semver_version_core(
+				&requirement->version
+			)
+		);
+		required_version.prerelease_metadata = required_version.prerelease_metadata;
+		required_version.build_metadata = required_version.build_metadata;
+		return semver_cmp(
+			&required_version,
+			version
+		) == 0;
+	}
+
+	if (option_is_some(requirement->min) && option_is_some(requirement->max)) {
+		int min_cmp = semver_cmp(version, option_unwrap(requirement->min));
+		int max_cmp = semver_cmp(version, option_unwrap(requirement->max));
+
+		return (min_cmp == 1 || (requirement->min_inclusive && min_cmp == 0))
+			&& (max_cmp == -1 || (requirement->max_inclusive && max_cmp == 0));
+	} else if (option_is_some(requirement->min)) {
+		int min_cmp = semver_cmp(version, option_unwrap(requirement->min));
+
+		return min_cmp == 1 || (requirement->min_inclusive && min_cmp == 0);
+	} else if (option_is_some(requirement->max)) {
+		int max_cmp = semver_cmp(version, option_unwrap(requirement->max));
+
+		return max_cmp == -1 || (requirement->max_inclusive && max_cmp == 0);
+	}
+
+	return true;
+}
 

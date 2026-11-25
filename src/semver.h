@@ -1,6 +1,8 @@
 #ifndef SEMVER_H
 #define SEMVER_H
 
+#include <copt.h>
+
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -62,9 +64,9 @@ typedef struct cute_version {
 	cute_version_core_t version;
 
 	version_restriction_t restriction;
-	cute_version_core_t min;
+	Option min;
 	bool min_inclusive;
-	cute_version_core_t max;
+	Option max;
 	bool max_inclusive;
 
 	char* prerelease_metadata;
