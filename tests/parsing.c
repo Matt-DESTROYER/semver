@@ -1,6 +1,7 @@
 #include "cute-test.h"
 #include "semver.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define LEN(s) (sizeof(s) - 1)
@@ -165,6 +166,229 @@ CUTE_TEST(free_metadata) {
 	CUTE_ASSERT_EQ(version.version.major.type, VERSION_NUMBER_NONE);
 	CUTE_ASSERT_EQ(version.version.minor.type, VERSION_NUMBER_NONE);
 	CUTE_ASSERT_EQ(version.version.patch.type, VERSION_NUMBER_NONE);
+}
+
+CUTE_TEST(parse_metadata_with_hyphens) {
+	semver_t semver = {0};
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-alpha-beta",
+			LEN("1.2.3-alpha-beta"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+	CUTE_ASSERT_STR_EQ(semver.prerelease_metadata, "alpha-beta");
+	semver_free(&semver);
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3+build-metadata",
+			LEN("1.2.3+build-metadata"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+	CUTE_ASSERT_STR_EQ(semver.build_metadata, "build-metadata");
+	semver_free(&semver);
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-alpha-beta+build-metadata",
+			LEN("1.2.3-alpha-beta+build-metadata"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+	CUTE_ASSERT_STR_EQ(semver.prerelease_metadata, "alpha-beta");
+	CUTE_ASSERT_STR_EQ(semver.build_metadata, "build-metadata");
+	semver_free(&semver);
+}
+
+CUTE_TEST(parse_multiple_metadata_identifiers) {
+	semver_t semver = {0};
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-alpha.1.beta.2+build.123.metadata",
+			LEN("1.2.3-alpha.1.beta.2+build.123.metadata"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+
+	CUTE_ASSERT_STR_EQ(semver.prerelease_metadata, "alpha.1.beta.2");
+	CUTE_ASSERT_STR_EQ(semver.build_metadata, "build.123.metadata");
+
+	semver_free(&semver);
+}
+
+CUTE_TEST(parse_metadata_boundaries) {
+	semver_t semver = {0};
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-alpha",
+			LEN("1.2.3-alpha"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+	CUTE_ASSERT_STR_EQ(semver.prerelease_metadata, "alpha");
+	CUTE_ASSERT(semver.build_metadata == NULL);
+	semver_free(&semver);
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3+build",
+			LEN("1.2.3+build"),
+			&semver
+		),
+		SEMVER_VALID
+	);
+	CUTE_ASSERT(semver.prerelease_metadata == NULL);
+	CUTE_ASSERT_STR_EQ(semver.build_metadata, "build");
+	semver_free(&semver);
+}
+
+CUTE_TEST(reject_empty_metadata) {
+	semver_t semver = {0};
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-",
+			LEN("1.2.3-"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3+",
+			LEN("1.2.3+"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-+build",
+			LEN("1.2.3-+build"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.3-alpha+",
+			LEN("1.2.3-alpha+"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+}
+
+CUTE_TEST(parse_long_metadata) {
+	char version[1024];
+	semver_t semver = {0};
+
+	memset(version, 'a', 500);
+	version[500] = '\0';
+
+	snprintf(version, sizeof(version), "1.2.3-%s+%s",
+			 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			 "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
+
+	CUTE_ASSERT_EQ(semver_parse(
+		version,
+		strlen(version),
+		&semver
+	), SEMVER_VALID);
+	CUTE_ASSERT_STR_EQ(
+		semver.prerelease_metadata,
+		"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	);
+	CUTE_ASSERT_STR_EQ(
+		semver.build_metadata,
+		"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	);
+
+	semver_free(&semver);
+}
+
+CUTE_TEST(reject_core_leading_zeroes) {
+	semver_t semver = {0};
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"01.2.3",
+			LEN("01.2.3"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.02.3",
+			LEN("1.02.3"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.03",
+			LEN("1.2.03"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+}
+
+CUTE_TEST(reject_missing_core_components) {
+	semver_t semver = {0};
+
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2",
+			LEN("1.2"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1",
+			LEN("1"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			".2.3",
+			LEN(".2.3"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1..3",
+			LEN("1..3"),
+			&semver
+		),
+		SEMVER_INVALID
+	);
+	CUTE_ASSERT_EQ(
+		semver_parse(
+			"1.2.",
+			LEN("1.2."),
+			&semver
+		),
+		SEMVER_INVALID
+	);
 }
 
 int main(void) {
