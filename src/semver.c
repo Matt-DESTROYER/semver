@@ -512,12 +512,12 @@ int size_t_cmp(size_t x, size_t y) {
 }
 
 // TODO:
+/*
 int version_cmp(const version_t* x, const version_t* y);
 int _version_cmp(const void* x, const void* y) {
 	return version_cmp((const version_t*)x, (const version_t*)y);
 }
 
-// TODO:
 int semver_cmp(const semver_t* x, const semver_t* y);
 int _semver_cmp(const void* x, const void* y) {
 	return semver_cmp((const semver_t*)x, (const semver_t*)y);
@@ -530,7 +530,8 @@ void sort_versions(version_t* versions, size_t count) {
 void sort_semvers(semver_t* semvers, size_t count) {
 	qsort(semvers, count, sizeof(semver_t), _semver_cmp);
 }
+*/
 
 // TODO:
-bool semver_satisfied(const semver_t* req, const version_t* installed);
+//bool semver_satisfied(const semver_t* req, const version_t* installed);
 
