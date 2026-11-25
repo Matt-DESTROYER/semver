@@ -220,7 +220,7 @@ bool semver_is_version_core(const char* string, size_t length) {
 
 			switch (version_core_idx) {
 				case 0:
-					if (!semver_is_major((const char*)(string + prev_dot + 1), i - prev_dot - 1))
+					if (!semver_is_major(string, i))
 						return false;
 					break;
 				case 1:
