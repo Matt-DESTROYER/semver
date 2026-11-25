@@ -33,10 +33,10 @@ bool semver_is_digit(char c) {
 }
 
 bool semver_is_digits(const char* string, size_t length) {
-	if (string == NULL || length == 0 || string[0] == '\0')
+	if (string == NULL || length == 0)
 		return false;
 
-	for (size_t i = 0; i < length && string[i] != '\0'; i++) {
+	for (size_t i = 0; i < length; i++) {
 		if (!semver_is_digit(string[i]))
 			return false;
 	}
@@ -52,7 +52,7 @@ bool semver_is_identifier_character(char c) {
 }
 
 bool semver_is_identifier_characters(const char* string, size_t length) {
-	for (size_t i = 0; i < length && string[i] != '\0'; i++) {
+	for (size_t i = 0; i < length; i++) {
 		if (!semver_is_identifier_character(string[i]))
 			return false;
 	}
@@ -60,16 +60,16 @@ bool semver_is_identifier_characters(const char* string, size_t length) {
 }
 
 bool semver_is_numeric_identifier(const char* string, size_t length) {
-	if (string == NULL || length == 0 || string[0] == '\0')
+	if (string == NULL || length == 0)
 		return false;
 
 	if (string[0] == '0')
-		return length == 1 || string[1] == '\0';
+		return length == 1;
 
 	if (!semver_is_positive_digit(string[0]))
 		return false;
 
-	for (size_t i = 1; i < length && string[i] != '\0'; i++) {
+	for (size_t i = 1; i < length; i++) {
 		if (!semver_is_digit(string[i]))
 			return false;
 	}
@@ -77,11 +77,11 @@ bool semver_is_numeric_identifier(const char* string, size_t length) {
 }
 
 bool semver_is_alphanumeric_identifier(const char* string, size_t length) {
-	if (string == NULL || length == 0 || string[0] == '\0')
+	if (string == NULL || length == 0)
 		return false;
 
 	bool found_non_digit = false;
-	for (size_t i = 0; i < length && string[i] != '\0'; i++) {
+	for (size_t i = 0; i < length; i++) {
 		if (semver_is_non_digit(string[i])) {
 			found_non_digit = true;
 		} else if (!semver_is_identifier_character(string[i])) {
@@ -102,7 +102,7 @@ bool semver_is_pre_release_identifier(const char* string, size_t length) {
 }
 
 bool semver_is_dot_separated_build_identifiers(const char* string, size_t length) {
-	if (string == NULL || length == 0 || string[0] == '\0')
+	if (string == NULL || length == 0)
 		return false;
 
 	if (semver_is_build_identifier(string, length))
@@ -115,7 +115,7 @@ bool semver_is_dot_separated_build_identifiers(const char* string, size_t length
 	bool seen_dot = false;
 	size_t prev_dot = 0;
 	size_t i = 0;
-	for (; i < length && string[i] != '\0'; i++) {
+	for (; i < length; i++) {
 		if (string[i] == SEMVER_DOT) {
 			if (seen_dot && prev_dot == i - 1)
 				return false;
@@ -147,7 +147,7 @@ bool semver_is_build(const char* string, size_t length) {
 }
 
 bool semver_is_dot_separated_pre_release_identifiers(const char* string, size_t length) {
-	if (string == NULL || length == 0 || string[0] == '\0')
+	if (string == NULL || length == 0)
 		return false;
 
 	if (semver_is_pre_release_identifier(string, length))
@@ -160,7 +160,7 @@ bool semver_is_dot_separated_pre_release_identifiers(const char* string, size_t 
 	bool seen_dot = false;
 	size_t prev_dot = 0;
 	size_t i = 0;
-	for (; i < length && string[i] != '\0'; i++) {
+	for (; i < length; i++) {
 		if (string[i] == SEMVER_DOT) {
 			if (seen_dot && prev_dot == i - 1)
 				return false;
@@ -203,7 +203,7 @@ bool semver_is_major(const char* string, size_t length) {
 }
 
 bool semver_is_version_core(const char* string, size_t length) {
-	if (string == NULL || length == 0 || string[0] == '\0')
+	if (string == NULL || length == 0)
 		return false;
 
 	if (string[0] == SEMVER_DOT)
@@ -213,7 +213,7 @@ bool semver_is_version_core(const char* string, size_t length) {
 	bool seen_dot = false;
 	size_t prev_dot = 0;
 	size_t i = 0;
-	for (; i < length && string[i] != '\0'; i++) {
+	for (; i < length; i++) {
 		if (string[i] == SEMVER_DOT) {
 			if (seen_dot && prev_dot == i - 1)
 				return false;
@@ -251,13 +251,13 @@ bool semver_is_version_core(const char* string, size_t length) {
 }
 
 bool semver_is_valid_semver(const char* string, size_t length) {
-	if (string == NULL || length == 0 || string[0] == '\0')
+	if (string == NULL || length == 0)
 		return false;
 
 	bool found_symbol = false;
 	size_t prev_symbol = 0;
 	size_t i = 0;
-	for (; i < length && string[i] != '\0'; i++) {
+	for (; i < length; i++) {
 		if (string[i] == SEMVER_PRERELEASE_SYM) {
 			// spec doesn't allow build then pre-release
 			if (found_symbol)
@@ -320,7 +320,7 @@ version_t version_parse(const char *string, size_t length) {
 	version_t version = version_new();
 
 	unsigned short int parts_found = 0;
-	for (size_t i = 0; i < length && string[i] != '\0'; i++) {
+	for (size_t i = 0; i < length; i++) {
 		if (string[i] == SEMVER_DOT) {
 			parts_found++;
 			continue;
@@ -386,7 +386,7 @@ semver_t semver_new() {
 semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* semver) {
 	// taken from is_valid_semver
 
-	if (semver == NULL || string == NULL || string[0] == '\0')
+	if (semver == NULL || string == NULL)
 		return SEMVER_INVALID;
 
 	if (!semver_is_valid_semver(string, length))
@@ -398,7 +398,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 	size_t prerelease_start = 0;
 	size_t build_start = 0;
 	size_t i = 0;
-	for (; i < length && string[i] != '\0'; i++) {
+	for (; i < length; i++) {
 		if (string[i] == SEMVER_PRERELEASE_SYM) {
 			// spec doesn't allow build then pre-release
 			if (found_symbol)
