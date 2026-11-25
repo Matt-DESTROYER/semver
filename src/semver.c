@@ -438,7 +438,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 
 	if (found_symbol) {
 		if (prerelease_start != 0) {
-			size_t prerelease_end = (build_start > prerelease_start ? build_start : i) - prerelease_start;
+			size_t prerelease_end = build_start > prerelease_start ? build_start : i;
 
 			if (!semver_is_pre_release((const char*)(string + prerelease_start + 1), prerelease_end - prerelease_start))
 				return SEMVER_INVALID;
