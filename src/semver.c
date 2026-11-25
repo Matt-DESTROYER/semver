@@ -433,7 +433,7 @@ semver_parse_status_t semver_parse(const char* string, size_t length, semver_t* 
 		return SEMVER_VALID;
 	}
 
-	version_t version = version_parse(string, prerelease_start);
+	version_t version = version_parse(string, prerelease_start != 0 ? prerelease_start : build_start);
 	semver->version = version;
 
 	if (found_symbol) {
