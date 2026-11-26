@@ -158,7 +158,7 @@ CUTE_TEST(reject_malformed_version_cores) {
 }
 
 CUTE_TEST(reject_unsupported_wildcards) {
-	assert_invalid_requirement("*");
+	assert_invalid_requirement("*"); // wildcards not currently supported
 	assert_invalid_requirement("1.*");
 	assert_invalid_requirement("1.2.*");
 	assert_invalid_requirement("^*");

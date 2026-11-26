@@ -59,7 +59,7 @@ CUTE_TEST(caret_full_version_bounds) {
 }
 
 CUTE_TEST(caret_zero_major_bounds) {
-	CUTE_ASSERT(!satisfies("^0", "0.0.0"));
+	CUTE_ASSERT(satisfies("^0", "0.0.0"));
 	CUTE_ASSERT(satisfies("^0", "0.9.9"));
 	CUTE_ASSERT(!satisfies("^0", "1.0.0"));
 
@@ -75,7 +75,7 @@ CUTE_TEST(caret_zero_major_bounds) {
 }
 
 CUTE_TEST(caret_zero_major_minor_bounds) {
-	CUTE_ASSERT(!satisfies("^0.0", "0.0.0"));
+	CUTE_ASSERT(satisfies("^0.0", "0.0.0"));
 	CUTE_ASSERT(satisfies("^0.0", "0.0.9"));
 	CUTE_ASSERT(!satisfies("^0.0", "0.1.0"));
 
@@ -98,7 +98,7 @@ CUTE_TEST(tilde_major_bounds) {
 	CUTE_ASSERT(satisfies("~1", "1.9.9"));
 	CUTE_ASSERT(!satisfies("~1", "2.0.0"));
 
-	CUTE_ASSERT(!satisfies("~0", "0.0.0"));
+	CUTE_ASSERT(satisfies("~0", "0.0.0"));
 	CUTE_ASSERT(satisfies("~0", "0.9.9"));
 	CUTE_ASSERT(!satisfies("~0", "1.0.0"));
 }

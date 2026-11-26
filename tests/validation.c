@@ -111,25 +111,25 @@ CUTE_TEST(invalid_characters) {
 	INVALID("1.0.0~alpha");
 }
 
-CUTE_TEST(reject_prerelease_leading_zeroes) {
+CUTE_TEST(invalid_prerelease_leading_zeroes) {
 	INVALID("1.2.3-01");
 	INVALID("1.2.3-001");
 	INVALID("1.2.3-alpha.01");
 }
 
-CUTE_TEST(accept_valid_prerelease_numbers) {
+CUTE_TEST(valid_prerelease_numbers) {
 	VALID("1.2.3-0");
 	VALID("1.2.3-1");
 	VALID("1.2.3-alpha.0");
 }
 
-CUTE_TEST(accept_build_metadata_leading_zeroes) {
+CUTE_TEST(valid_build_metadata_leading_zeroes) {
 	VALID("1.2.3+01");
 	VALID("1.2.3+001");
 	VALID("1.2.3+build.0001");
 }
 
-CUTE_TEST(reject_invalid_metadata_characters) {
+CUTE_TEST(invalid_invalid_metadata_characters) {
 	INVALID("1.2.3-alpha_1");
 	INVALID("1.2.3+build@123");
 	INVALID("1.2.3-alpha!");
@@ -167,6 +167,8 @@ int main(void) {
 	CUTE_RUN(valid_prerelease_versions);
 	CUTE_RUN(valid_build_versions);
 	CUTE_RUN(valid_combined_metadata);
+	CUTE_RUN(valid_prerelease_numbers);
+	CUTE_RUN(valid_build_metadata_leading_zeroes);
 	CUTE_RUN(valid_hyphenated_metadata);
 
 	CUTE_RUN(invalid_core_versions);
@@ -174,6 +176,8 @@ int main(void) {
 	CUTE_RUN(invalid_build_versions);
 	CUTE_RUN(invalid_metadata_order);
 	CUTE_RUN(invalid_characters);
+	CUTE_RUN(invalid_prerelease_leading_zeroes);
+	CUTE_RUN(invalid_invalid_metadata_characters);
 	CUTE_RUN(invalid_embedded_null);
 
 	return cute_test_finish();
