@@ -67,6 +67,10 @@ CUTE_TEST(invalid_core_versions) {
 	INVALID("v1.0.0");
 	INVALID(" 1.0.0");
 	INVALID("1.0.0 ");
+	INVALID("1.2.3\n");
+	INVALID("1.2.3\t");
+	INVALID("1.2.3/");
+	INVALID("1.2.3\\");
 }
 
 CUTE_TEST(invalid_prerelease_versions) {
@@ -148,6 +152,14 @@ CUTE_TEST(invalid_embedded_null) {
 		version,
 		sizeof(version) - 1
 	));
+
+	const char leading_null[] = "\0.0.0";
+	const char middle_null[] = "1.\0.0";
+	const char trailing_null[] = "1.0.0\0";
+
+	CUTE_ASSERT(!semver_is_valid_semver(leading_null, sizeof(leading_null) - 1));
+	CUTE_ASSERT(!semver_is_valid_semver(middle_null, sizeof(middle_null) - 1));
+	CUTE_ASSERT(!semver_is_valid_semver(trailing_null, sizeof(trailing_null) - 1));
 }
 
 int main(void) {

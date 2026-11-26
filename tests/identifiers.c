@@ -98,6 +98,24 @@ CUTE_TEST(dot_separated_identifiers) {
 	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers(".alpha", 6));
 	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers("alpha.", 6));
 	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers("alpha..1", 8));
+
+	CUTE_ASSERT(!semver_is_dot_separated_build_identifiers("", 0));
+	CUTE_ASSERT(!semver_is_dot_separated_build_identifiers(".", 1));
+	CUTE_ASSERT(!semver_is_dot_separated_build_identifiers("..", 2));
+
+	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers("", 0));
+	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers(".", 1));
+	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers("..", 2));
+}
+
+CUTE_TEST(numeric_identifier_leading_zero_rules) {
+	CUTE_ASSERT(semver_is_build_identifier("001", 3));
+	CUTE_ASSERT(!semver_is_pre_release_identifier("001", 3));
+
+	CUTE_ASSERT(semver_is_dot_separated_build_identifiers("001.002", 7));
+	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers("001.002", 7));
+
+	CUTE_ASSERT(!semver_is_dot_separated_pre_release_identifiers("alpha.01", 8));
 }
 
 int main(void) {
@@ -108,6 +126,7 @@ int main(void) {
 	CUTE_RUN(build_identifiers);
 	CUTE_RUN(prerelease_identifiers);
 	CUTE_RUN(dot_separated_identifiers);
+	CUTE_RUN(numeric_identifier_leading_zero_rules);
 
 	return cute_test_finish();
 }
