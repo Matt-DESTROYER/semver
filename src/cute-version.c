@@ -69,7 +69,8 @@ cute_version_t cute_version_new() {
 	return (cute_version_t){
 		.version = cute_version_core_new(),
 
-		.restriction = CUTE_VERSION_ANY,
+		// default to ^x.y.z behaviour
+		.restriction = CUTE_VERSION_LOCK_MOST_SIGNIFICANT,
 		.min = option_none(),
 		.min_inclusive = true,
 		.max = option_none(),
