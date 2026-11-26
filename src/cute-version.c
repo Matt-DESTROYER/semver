@@ -1,3 +1,4 @@
+#include <iso646.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -276,22 +277,20 @@ semver_version_core_t* cute_version_caret_upper_bound(const cute_version_t* vers
 
 	*max = semver_version_core_new();
 
-	unsigned short int most_significant = 0;
-	if (version->version.major.type != VERSION_NUMBER_EXPLICIT)
-		most_significant++;
-	if (version->version.minor.type != VERSION_NUMBER_EXPLICIT)
-		most_significant++;
-
-	switch (most_significant) {
-		case 0:
-			max->major = version->version.major.number + 1;
-			break;
-		case 1:
-			max->minor = version->version.minor.number + 1;
-			break;
-		default:
-			max->patch = version->version.patch.number + 1;
-			break;
+	if (version->version.major.number != 0) {
+		max->major = version->version.major.number + 1;
+	} else if (version->version.minor.type == VERSION_NUMBER_EXPLICIT
+			&& version->version.minor.number != 0) {
+		max->minor = version->version.minor.number + 1;
+	} else if (version->version.patch.type == VERSION_NUMBER_EXPLICIT
+			&& version->version.patch.number != 0) {
+		max->patch = version->version.patch.number + 1;
+	} else if (version->version.patch.type == VERSION_NUMBER_EXPLICIT) {
+		max->patch = 1;
+	} else if (version->version.minor.type == VERSION_NUMBER_EXPLICIT) {
+		max->minor = 1;
+	} else {
+		max->minor = 1;
 	}
 
 	return max;
