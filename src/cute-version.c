@@ -80,11 +80,11 @@ cute_version_t cute_version_new() {
 	};
 }
 
-bool cute_version_str_starts_with(const char* string, const char* substr) {
+bool cute_version_str_starts_with(const char* string, size_t length, const char* substr) {
 	size_t i = 0;
 	for (; substr[i] != '\0'; i++) {
-		if (string[i] == '\0'
-				|| substr[i] != string[i])
+		if (substr[i] != string[i]
+				|| i > length)
 			return false;
 	}
 	return true;
@@ -104,48 +104,56 @@ cute_version_parse_status_t cute_version_parse(const char *string, size_t length
 	const char* restriction_operator;
 	if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_EQUALS_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_EQUALS_SYM;
 		parsed.restriction = CUTE_VERSION_EQUALS;
 	} else if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_MIN_INC_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_MIN_INC_SYM;
 		parsed.restriction = CUTE_VERSION_MIN_INC;
 	} else if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_MAX_INC_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_MAX_INC_SYM;
 		parsed.restriction = CUTE_VERSION_MAX_INC;
 	} else if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_MIN_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_MIN_SYM;
 		parsed.restriction = CUTE_VERSION_MIN;
 	} else if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_MAX_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_MAX_SYM;
 		parsed.restriction = CUTE_VERSION_MAX;
 	} else if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_LOCK_MOST_SIGNIFICANT_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_LOCK_MOST_SIGNIFICANT_SYM;
 		parsed.restriction = CUTE_VERSION_LOCK_MOST_SIGNIFICANT;
 	} else if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT_SYM;
 		parsed.restriction = CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT;
 	} else if (cute_version_str_starts_with(
 		string,
+		length,
 		CUTE_VERSION_ANY_SYM
 	)) {
 		restriction_operator = CUTE_VERSION_ANY_SYM;
@@ -268,11 +276,9 @@ semver_version_core_t* cute_version_caret_upper_bound(const cute_version_t* vers
 	*max = semver_version_core_new();
 
 	unsigned short int most_significant = 0;
-	if (version->version.major.type != VERSION_NUMBER_EXPLICIT
-			|| version->version.major.number == 0)
+	if (version->version.major.type != VERSION_NUMBER_EXPLICIT)
 		most_significant++;
-	if (version->version.minor.type != VERSION_NUMBER_EXPLICIT
-			|| version->version.minor.number == 0)
+	if (version->version.minor.type != VERSION_NUMBER_EXPLICIT)
 		most_significant++;
 
 	switch (most_significant) {
@@ -390,8 +396,8 @@ bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* v
 				&requirement->version
 			)
 		);
-		required_version.prerelease_metadata = required_version.prerelease_metadata;
-		required_version.build_metadata = required_version.build_metadata;
+		required_version.prerelease_metadata = requirement->prerelease_metadata;
+		required_version.build_metadata = requirement->build_metadata;
 		return semver_cmp(
 			&required_version,
 			version
