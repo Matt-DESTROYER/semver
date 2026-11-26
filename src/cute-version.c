@@ -153,15 +153,9 @@ cute_version_parse_status_t cute_version_parse(const char *string, size_t length
 	)) {
 		restriction_operator = CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT_SYM;
 		parsed.restriction = CUTE_VERSION_ALLOW_LEAST_SIGNIFICANT;
-	} else if (cute_version_str_starts_with(
-		string,
-		length,
-		CUTE_VERSION_ANY_SYM
-	)) {
-		restriction_operator = CUTE_VERSION_ANY_SYM;
-		parsed.restriction = CUTE_VERSION_ANY;
 	} else {
 		restriction_operator = NULL;
+		parsed.restriction = CUTE_VERSION_LOCK_MOST_SIGNIFICANT;
 	}
 
 	if (restriction_operator != NULL) {
