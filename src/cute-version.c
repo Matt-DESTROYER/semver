@@ -410,6 +410,8 @@ bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* v
 				requirement->min
 			)
 		);
+		req_min.prerelease_metadata = requirement->prerelease_metadata;
+		req_min.build_metadata = requirement->build_metadata;
 		int min_cmp = semver_cmp(
 			version,
 			&req_min
@@ -419,6 +421,8 @@ bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* v
 				requirement->max
 			)
 		);
+		req_max.prerelease_metadata = requirement->prerelease_metadata;
+		req_max.build_metadata = requirement->build_metadata;
 		int max_cmp = semver_cmp(
 			version,
 			&req_max
@@ -432,6 +436,8 @@ bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* v
 				requirement->min
 			)
 		);
+		req_min.prerelease_metadata = requirement->prerelease_metadata;
+		req_min.build_metadata = requirement->build_metadata;
 		int min_cmp = semver_cmp(
 			version,
 			&req_min
@@ -444,6 +450,8 @@ bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* v
 				requirement->max
 			)
 		);
+		req_max.prerelease_metadata = requirement->prerelease_metadata;
+		req_max.build_metadata = requirement->build_metadata;
 		int max_cmp = semver_cmp(
 			version,
 			&req_max
