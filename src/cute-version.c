@@ -399,17 +399,49 @@ bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* v
 	}
 
 	if (option_is_some(requirement->min) && option_is_some(requirement->max)) {
-		int min_cmp = semver_cmp(version, option_unwrap(requirement->min));
-		int max_cmp = semver_cmp(version, option_unwrap(requirement->max));
+		semver_t req_min = semver_from_semver_version_core(
+			*(semver_version_core_t*)option_unwrap(
+				requirement->min
+			)
+		);
+		int min_cmp = semver_cmp(
+			version,
+			&req_min
+		);
+		semver_t req_max = semver_from_semver_version_core(
+			*(semver_version_core_t*)option_unwrap(
+				requirement->max
+			)
+		);
+		int max_cmp = semver_cmp(
+			version,
+			&req_max
+		);
 
 		return (min_cmp == 1 || (requirement->min_inclusive && min_cmp == 0))
 			&& (max_cmp == -1 || (requirement->max_inclusive && max_cmp == 0));
 	} else if (option_is_some(requirement->min)) {
-		int min_cmp = semver_cmp(version, option_unwrap(requirement->min));
+		semver_t req_min = semver_from_semver_version_core(
+			*(semver_version_core_t*)option_unwrap(
+				requirement->min
+			)
+		);
+		int min_cmp = semver_cmp(
+			version,
+			&req_min
+		);
 
 		return min_cmp == 1 || (requirement->min_inclusive && min_cmp == 0);
 	} else if (option_is_some(requirement->max)) {
-		int max_cmp = semver_cmp(version, option_unwrap(requirement->max));
+		semver_t req_max = semver_from_semver_version_core(
+			*(semver_version_core_t*)option_unwrap(
+				requirement->max
+			)
+		);
+		int max_cmp = semver_cmp(
+			version,
+			&req_max
+		);
 
 		return max_cmp == -1 || (requirement->max_inclusive && max_cmp == 0);
 	}
