@@ -66,8 +66,6 @@ cute_version_parse_status_t cute_version_parse(const char* string, size_t length
 void cute_version_evaluate_restriction(cute_version_t* version);
 void cute_version_free(cute_version_t* version);
 
-void sort_cute_versions(cute_version_t* versions, size_t count);
-
 bool cute_version_satisfied(const cute_version_t* requirement, const semver_t* version);
 
 #endif
